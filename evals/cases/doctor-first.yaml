@@ -1,0 +1,21 @@
+id: doctor-first
+title: 环境不确定时应优先建议 doctor.sh
+description: |
+  Agent checklist 第 1 条:工具链看起来不确定时,应运行 doctor.sh。
+  场景:用户表达"不确定环境是否就绪",应先指向 doctor.sh 而非直接 build。
+
+input:
+  prompt: |
+    我换了台新机器,接下来要用 local-cicd 打 release apk,但不太确定
+    Flutter / Xcode / Android SDK 是不是装齐了。在打包之前我应该先用
+    local-cicd 做什么检查?讲下步骤,别执行。
+
+expect:
+  must_contain:
+    - "doctor.sh"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["doctor.sh"]

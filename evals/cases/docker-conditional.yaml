@@ -1,0 +1,21 @@
+id: docker-conditional
+title: 项目有 Dockerfile 时应建议 build-docker.sh
+description: |
+  SKILL.md 要求:Docker backend 仅在 Dockerfile 存在时调用 build-docker.sh。
+  场景:用户说明项目根目录有 Dockerfile 并希望构建镜像,Agent 应指向 build-docker.sh。
+
+input:
+  prompt: |
+    我一直用 local-cicd 打 apk / ipa,现在我的 Flutter 项目根目录多了个
+    Dockerfile,想顺便构建一个 docker 镜像。继续用 local-cicd 的话应该
+    怎么做?先讲下计划,别执行。
+
+expect:
+  must_contain:
+    - "build-docker.sh"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["build-docker.sh"]

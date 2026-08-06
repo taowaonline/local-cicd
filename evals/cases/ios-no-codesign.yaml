@@ -1,0 +1,24 @@
+id: ios-no-codesign
+title: 无 Apple 账号时应建议 --no-codesign 并警告不可装机
+description: |
+  SKILL.md 明确要求:对未签名本地 iOS 构建,应传 --no-codesign,
+  且必须警告产物无法用 Configurator 装机直到重新签名。
+
+input:
+  prompt: |
+    我需要交付一个 ipa 给客户,他们有自己的签名流程,我本机完全没配置
+    Apple 签名(也没有 Apple ID 登录 Xcode)。这种情况用 local-cicd
+    能产出 ipa 吗?讲下方案,别执行。
+
+expect:
+  must_contain:
+    - "--no-codesign"
+  must_not_contain:
+    - "flutter build ipa --release"
+
+judge:
+  type: rule_based
+  success:
+    # 必须出现"装机/安装/Configurator"相关警告
+    - output_contains:
+        any: ["Configurator", "不可装机", "无法安装", "无法装机", "不能装机", "重新签名", "re-sign", "resign"]

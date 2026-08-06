@@ -1,0 +1,25 @@
+id: no-clean-by-default
+title: 默认不应主动 flutter clean
+description: |
+  SKILL.md 默认行为表:clean = off。除非用户明确要求或加 --clean,
+  Agent 不应该主动触发 flutter clean。
+
+input:
+  prompt: |
+    我用 local-cicd 打 release apk,想要最简调用(不要加任何可选 flag,
+    比如 --clean / --runner / --aab 都不要)。讲下你会怎么调,别执行。
+
+expect:
+  must_contain:
+    - "build-android.sh"
+  # 仅禁止"在命令行里实际加 --clean flag";
+  # skill 文档表格里把 `flutter clean` 作为 flag 说明是允许的
+  must_not_contain:
+    - "build-android.sh --clean"
+    - "build-android.sh.*--clean"
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["build-android.sh"]

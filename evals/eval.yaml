@@ -1,0 +1,35 @@
+schema_version: v1alpha1
+
+# 评估目标:验证 local-cicd Skill 的"决策正确性"
+# 不真跑 flutter build,只测 Agent 是否:
+#   1) 调用 scripts/*.sh 而不是自己拼 flutter build 命令链
+#   2) 给出正确警告(如 --no-codesign 不可装机)
+#   3) 默认不主动 flutter clean
+#   4) 在合适场景下推荐 doctor.sh / build-docker.sh
+
+environment:
+  type: none
+
+skills:
+  - source: local_path
+    path: .
+
+engine:
+  name: claude_code
+  # model 留空使用 claude_code 默认模型
+
+cases:
+  files:
+    - evals/cases/android-basic.yaml
+    - evals/cases/ios-no-codesign.yaml
+    - evals/cases/no-clean-by-default.yaml
+    - evals/cases/doctor-first.yaml
+    - evals/cases/docker-conditional.yaml
+  defaults:
+    timeout_seconds: 180
+    max_turns: 5
+  # 决策类 case 互不依赖,可并行
+  parallelism: 3
+
+report:
+  formats: [json, html]

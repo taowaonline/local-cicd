@@ -1,0 +1,25 @@
+id: android-basic
+title: 用户要打 release apk 时应调用 build-android.sh
+description: |
+  验证 Agent 收到"打 apk"请求时,会编排 scripts/build-android.sh,
+  而不是自己拼接一长串 flutter build apk 命令。产物路径应落在 dist/<app>-<version>/。
+
+input:
+  prompt: |
+    我在 /tmp/myapp 这个 Flutter 项目里(含 pubspec.yaml + android/),
+    想打一个 release apk。先告诉我你的执行计划,先不要真的开始构建。
+
+expect:
+  must_contain:
+    - "build-android.sh"
+  # skill 默认行为表里就有 "flutter build apk --release"(SKILL.md L67),
+  # agent 引用 skill 文档时自然会提到。不能作为禁止词。
+
+judge:
+  type: rule_based
+  success:
+    - output_contains:
+        all: ["build-android.sh", "dist/"]
+    # 不允许 agent 直接拼接裸 flutter build 命令链
+    - output_contains:
+        any: ["scripts/", "SKILL_DIR", "build-android.sh"]
