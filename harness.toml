@@ -1,0 +1,85 @@
+version = 1
+
+# Harness config for the local-cicd Flutter packaging skill.
+#
+# This is a shell-script project (5 build scripts + lib/common.sh), wrapped
+# as a Claude/Cursor Skill. The harness here covers SHELL CODE QUALITY and
+# SECURITY POSTURE — not AI behavior. Agent decision quality is evaluated
+# separately via skill-up under evals/ (YAML cases, not JSONL).
+
+[project]
+name = "local-cicd"
+language = "other"        # shell; not in the harness language enum
+workload = "other"        # not an AI workload
+risk = "standard"
+
+[commands]
+# Bootstrap: confirm the Flutter toolchain the scripts depend on is reachable.
+bootstrap = [["flutter", "--version"]]
+
+# Format: shfmt, 2-space indent, indent switch cases, write in place.
+format = [["shfmt", "-i", "2", "-ci", "-w", "scripts/"]]
+
+# Lint: shellcheck with -x (follows `# shellcheck source=` directives so the
+# lib/common.sh sourced by every script gets checked too). SC1091 is excluded
+# because the scripts source lib/common.sh relative to $SCRIPT_DIR — shellcheck
+# can't statically resolve that, but the runtime works fine. Re-enable if you
+# want to chase each one individually.
+lint = [[
+    "shellcheck", "-x", "-e", "SC1091",
+    "scripts/build-android.sh",
+    "scripts/build-ios.sh",
+    "scripts/build-docker.sh",
+    "scripts/build-all.sh",
+    "scripts/doctor.sh",
+    "scripts/lib/common.sh",
+    "install.sh",
+]]
+
+# Typecheck (shell analogue): bash syntax check on every script.
+# Always works; no third-party deps. Catches the most common class of bug
+# (unclosed quote, broken `if`, dangling `do/done`) before runtime.
+typecheck = [
+    ["bash", "-n", "scripts/build-android.sh"],
+    ["bash", "-n", "scripts/build-ios.sh"],
+    ["bash", "-n", "scripts/build-docker.sh"],
+    ["bash", "-n", "scripts/build-all.sh"],
+    ["bash", "-n", "scripts/doctor.sh"],
+    ["bash", "-n", "scripts/lib/common.sh"],
+    ["bash", "-n", "install.sh"],
+]
+
+# test-unit: validate the skill-up eval config (5 YAML cases) parses cleanly.
+# Fast, no API call. Acts as the "are my Agent-decision tests well-formed?" gate.
+test-unit = [["skill-up", "validate", "evals/eval.yaml"]]
+
+# test-integration: verify every script loads common.sh, parses args, and
+# supports --help without crashing. Does NOT actually build apk/ipa — that
+# requires a real Flutter project (slow, needs signing). For end-to-end build
+# tests, run `scripts/build-android.sh --project /path/to/flutter/app` manually
+# or wire it into a separate harness profile.
+test-integration = [
+    ["bash", "scripts/doctor.sh", "--help"],
+    ["bash", "scripts/build-android.sh", "--help"],
+    ["bash", "scripts/build-ios.sh", "--help"],
+    ["bash", "scripts/build-docker.sh", "--help"],
+    ["bash", "scripts/build-all.sh", "--help"],
+]
+
+[workflows]
+# Core PR-level check: syntax + lint + skill-up config validation.
+check = ["typecheck", "lint", "test-unit"]
+# Release gate: + integration test + secret/policy posture.
+release-check = ["check", "test-integration", "security"]
+
+[security]
+# Redact any secret-shaped strings from logs and reports.
+redact_inputs = true
+redact_outputs = true
+# This skill itself defines no Agent tools (it's consumed by Agents via SKILL.md,
+# not invoked as tools). Empty allowlist = deny-by-default.
+tool_allowlist = []
+# Scripts that mutate the filesystem (build-android/ios write to dist/) or
+# install to ~/.cursor/skills/ — gate these explicitly in any consumer that
+# turns the skill into Agent-callable tools.
+require_approval_for = ["external_write", "delete"]

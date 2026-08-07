@@ -1,0 +1,13 @@
+# Harness generated artifacts. Baselines under evals/baselines/ ARE
+# checked in; reports and runtime artifacts are NOT.
+evals/reports/*
+!evals/reports/.gitkeep
+
+# skill-up workspaces (per-iteration eval artifacts).
+*-workspace/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
