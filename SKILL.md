@@ -40,7 +40,7 @@ Skill root (this folder):
 ```bash
 SKILL_DIR="${HOME}/.cursor/skills/local-cicd"
 # fallback if developing from repo:
-# SKILL_DIR="/Users/tommacmini4/orca/projects/Local_CICD"
+# SKILL_DIR="/Users/tommacmini4/Documents/code/Local_CICD"
 ```
 
 ### Commands
